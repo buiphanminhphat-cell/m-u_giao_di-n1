@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGV Control</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #14b8a6;
+    display: flex;
+}
+
+/* LEFT PANEL */
+.left {
+    width: 350px;
+    padding: 20px;
+}
+
+/* CARD */
+.card {
+    background: #e5e7eb;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* TITLE */
+.title {
+    background: #065f46;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    border-radius: 20px;
+    margin-bottom: 15px;
+}
+
+/* TABLE */
+.row {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+
+/* BUTTON */
+button {
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.start { background: #22c55e; color: white; }
+.stop { background: #ef4444; color: white; }
+
+/* SWITCH */
+.switch {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+input[type="checkbox"] {
+    width: 40px;
+    height: 20px;
+}
+
+/* CONTROL PAD */
+.pad {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.pad button {
+    height: 60px;
+}
+
+/* SPEED */
+.slider {
+    width: 100%;
+}
+
+/* RIGHT MAP */
+.right {
+    flex: 1;
+    background: #d1d5db;
+    margin: 20px;
+    border-radius: 20px;
+    padding: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="left">
+
+    <!-- AGV INFO -->
+    <div class="card">
+        <div class="title">AGV INFORMATION</div>
+
+        <div class="row"><span>ID</span><span id="agv_id">01</span></div>
+        <div class="row"><span>Status</span><span id="status">OFFLINE</span></div>
+        <div class="row"><span>Speed</span><span id="speed_val">0</span></div>
+        <div class="row"><span>Battery</span><span id="battery">--%</span></div>
+
+        <br>
+
+        <button class="start" id="btn_start">START</button>
+        <button class="stop" id="btn_stop">STOP</button>
+
+        <br><br>
+
+        <div class="switch">
+            <span>AUTO MODE</span>
+            <input type="checkbox" id="auto_mode">
+        </div>
+    </div>
+
+    <!-- MANUAL -->
+    <div class="card">
+        <div class="title">MANUAL CONTROL</div>
+
+        <div class="pad">
+            <div></div>
+            <button id="btn_up">↑</button>
+            <div></div>
+
+            <button id="btn_left">←</button>
+            <button id="btn_stop2">■</button>
+            <button id="btn_right">→</button>
+
+            <div></div>
+            <button id="btn_down">↓</button>
+            <div></div>
+        </div>
+
+        <br>
+
+        <input type="range" min="0" max="100" value="50" class="slider" id="speed">
+    </div>
+
+</div>
+
+<!-- MAP -->
+<div class="right">
+    <h2>LIVE MAP MONITOR</h2>
+    <div id="map_area">Map sẽ hiển thị ở đây</div>
+</div>
+
+<script>
+
+// =========================
+// KẾT NỐI ESP32
+// =========================
+
+// Đổi IP theo ESP32 của bạn
+const ESP_IP = "http://192.168.1.100";
+
+// gửi lệnh
+function sendCommand(cmd) {
+    fetch(`${ESP_IP}/control?cmd=${cmd}`)
+    .catch(err => console.log(err));
+}
+
+// =========================
+// BUTTON CONTROL
+// =========================
+
+document.getElementById("btn_start").onclick = () => sendCommand("start");
+document.getElementById("btn_stop").onclick = () => sendCommand("stop");
+
+document.getElementById("btn_up").onclick = () => sendCommand("forward");
+document.getElementById("btn_down").onclick = () => sendCommand("backward");
+document.getElementById("btn_left").onclick = () => sendCommand("left");
+document.getElementById("btn_right").onclick = () => sendCommand("right");
+document.getElementById("btn_stop2").onclick = () => sendCommand("stop");
+
+// AUTO MODE
+document.getElementById("auto_mode").onchange = function() {
+    if(this.checked){
+        sendCommand("auto_on");
+    } else {
+        sendCommand("auto_off");
+    }
+};
+
+// SPEED
+document.getElementById("speed").oninput = function() {
+    let val = this.value;
+    document.getElementById("speed_val").innerText = val;
+    sendCommand("speed_" + val);
+};
+
+</script>
+
+</body>
+</html>
